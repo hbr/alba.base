@@ -1,0 +1,173 @@
+use
+    core
+end
+
+
+{:
+Basic Definitions
+=================
+:}
+
+deferred class N:BOUNDED_NATURAL
+
+0: N               deferred end
+bit_size: N        deferred end
+
+successor  (a:N): N  deferred end
+predecessor(a:N): N  deferred end
+
+1: N    = 0.successor
+2: N    = 1.successor
+3: N    = 2.successor
+4: N    = 3.successor
+5: N    = 4.successor
+6: N    = 5.successor
+7: N    = 6.successor
+8: N    = 7.successor
+9: N    = 8.successor
+hex_a:N = 9.successor
+hex_b:N = hex_a.successor
+hex_c:N = hex_b.successor
+hex_d:N = hex_c.successor
+hex_e:N = hex_d.successor
+hex_f:N = hex_e.successor
+
+ten: N  = 9.successor
+hex: N  = hex_f.successor
+
+greatest:N  = 0.predecessor
+
+(+) (a,b:N): N
+    -> inspect b
+       case 0 then
+           a
+       case n.successor then
+           (a + n).successor
+
+(*) (a,b:N): N
+    -> inspect b
+       case 0 then
+           0
+       case n.successor then
+           (a * n) + a
+
+
+shift_left (a,b:N): N
+    -> inspect
+           b
+       case 0 then
+           a
+       case n.successor then
+           a.shift_left(n) * 2
+
+
+
+all(a:N, p:{N})
+        -- Axioms
+    ensure
+        a.successor.predecessor = a
+
+        a = greatest ==> a.successor = 0
+
+        a = a.successor ==> false
+
+        0 in p
+        ==>
+        (all(n) n /= greatest ==> n in p ==> n.successor in p)
+        ==>
+        a in p
+
+        a = bit_size ==> 1.shift_left(a) = 0
+    deferred
+    end
+
+
+all(a,b:N)
+        -- Properties of the successor and predecessor function
+    ensure
+        a = a.successor ==> false
+        a /= greatest ==> a.successor /= 0
+        a.successor = b.successor ==> a = b
+        some(b) a = b.successor
+
+        a.predecessor.successor = a
+    end
+
+all(a:N)
+        -- Pattern matching is possible
+    ensure
+        (a /= 0) = (some(b) b /= greatest and a = b.successor)
+
+        a = 0  ==> (a /= 0) ==> false
+    end
+
+
+
+
+{:
+Order Structure
+===============
+:}
+
+(<=) (a,b:N): BOOLEAN
+    -> inspect
+           a,b
+       case 0, _ then
+           true
+       case _, 0 then
+           false
+       case n.successor, m.successor then
+           n <= m
+
+(<)  (a,b:N): BOOLEAN
+    -> a <= b and a /= b
+
+
+
+least_bounded (p:{N}, a:N): N
+        -- The least number less or equal 'a' which satisfies 'p' or '0' if
+        -- no such number exists.
+    -> inspect
+           a
+       case 0 then
+           0
+       case n.successor then
+           if p.least_bounded(n) = 0 and n.successor in p then
+               n.successor
+           else
+               n
+
+
+
+all(a,b,c:N)
+     ensure
+         0 <= a
+         a <= 0 ==> a = 0
+
+         a <= b ==> b /= greatest ==> a < b.successor
+         a < b.successor ==> b /= greatest ==> a <= b
+
+         a /= greatest ==> a.successor <= b ==> a < b
+
+         a <= b ==> b <= a ==> a = b
+         a <= b ==> b <= c ==> a <= c
+         a <= b or b <= a
+     end
+
+
+{:
+Arithmetic
+==========
+:}
+
+
+all(a,b,c:N)
+    ensure
+        (a + b).successor = a + b.successor
+        (a + b).successor = a.successor + b
+        (greatest + a).successor = a
+
+        0 + a = a
+        a + b = b + a
+        a + b + c = a + (b + c)
+    end
